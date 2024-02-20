@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Магнитное поле катушек Гельмгольца</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<h1>Магнитное поле катушек Гельмгольца</h1>
+
+<label for="coilRadius">Радиус катушек (м): </label>
+<input type="number" id="coilRadius" step="0.001" value="0.1">
+
+<label for="numTurns">Количество витков: </label>
+<input type="number" id="numTurns" value="100">
+
+<label for="current">Сила тока (A): </label>
+<input type="number" id="current" step="0.1" value="1">
+
+<canvas id="myChart" width="400" height="200"></canvas>
+
+<script>
+    function calculateMagneticInduction(radius, numTurns, current, distance) {
+        const mu0 = 4 * Math.PI * 1e-7;
+
+        const induction1 = (mu0 * numTurns * current * Math.pow(radius, 2)) / (2 * Math.pow((Math.pow(radius, 2) + Math.pow(distance, 2)), 3/2));
+        const induction2 = (mu0 * numTurns * current * Math.pow(radius, 2)) / (2 * Math.pow((Math.pow(radius, 2) + Math.pow((radius - distance), 2)), 3/2));
+
+        return induction1 + induction2;
+    }
+
+    function updateChart() {
+        const coilRadius = parseFloat(document.getElementById('coilRadius').value);
+        const numTurns = parseInt(document.getElementById('numTurns').value);
+        const current = parseFloat(document.getElementById('current').value);
+
+        const ctx = document.getElementById('myChart').getContext('2d');
+
+        const data = {
+            labels: [],
+            datasets: [{
+                label: 'Магнитная индукция (T)',
+                data: [],
+                fill: false,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        };
+
+        for (let distance = -2 * coilRadius; distance <= 3 * coilRadius; distance += coilRadius / 100) {
+            data.labels.push(distance.toFixed(6));
+            data.datasets[0].data.push(calculateMagneticInduction(coilRadius, numTurns, current, distance).toFixed(6));
+        }
+
+        if (window.myLineChart) {
+            window.myLineChart.data = data;
+            window.myLineChart.update();
+        } else {
+            window.myLineChart = new Chart(ctx, {
+                type: 'line',
+                data: data,
+            });
+        }
+    }
+
+    document.getElementById('coilRadius').addEventListener('input', updateChart);
+    document.getElementById('numTurns').addEventListener('input', updateChart);
+    document.getElementById('current').addEventListener('input', updateChart);
+
+    updateChart();
+</script>
+</body>
+</html>
